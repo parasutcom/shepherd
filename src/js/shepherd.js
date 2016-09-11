@@ -131,6 +131,17 @@ function stringifyDataAttrs(obj) {
   return dataAttrs.join(' ');
 }
 
+function createEventProp(tid, value) {
+  let eventProp = document.createElement('input');
+
+  eventProp.setAttribute('type', 'hidden');
+  eventProp.setAttribute('data-ttype', 'event');
+  eventProp.setAttribute('data-tid', tid);
+  eventProp.setAttribute('value', value);
+
+  return eventProp;
+}
+
 class Step extends Evented {
 
   constructor(tour, options) {
@@ -379,6 +390,18 @@ class Step extends Evented {
     let dataAttrs = this.options.dataAttrs ? stringifyDataAttrs(this.options.dataAttrs) : null;
 
     this.el = createFromHTML(`<div class='shepherd-step ${ this.options.classes || '' }' data-id='${ this.id }' ${ this.options.idAttribute ? 'id="' + this.options.idAttribute + '"' : '' } ${ dataAttrs ? dataAttrs : '' }></div>`);
+
+    let tourVersionEventProp = createEventProp('version', this.options.commonEventProps.version);
+    this.el.appendChild(tourVersionEventProp);
+
+    let stepCountEventProp = createEventProp('step-count', this.options.commonEventProps.stepCount);
+    this.el.appendChild(stepCountEventProp);
+
+    let currentStepEventProp = createEventProp('current-step', this.options.id);
+    this.el.appendChild(currentStepEventProp);
+
+    let stepDescriptionEventProp = createEventProp('current-step-description', this.options.description);
+    this.el.appendChild(stepDescriptionEventProp);
 
     let content = document.createElement('div');
     content.className = 'shepherd-content';
