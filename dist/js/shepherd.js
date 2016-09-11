@@ -140,6 +140,29 @@ function parseShorthand(obj, props) {
   return out;
 }
 
+function stringifyDataAttrs(obj) {
+  var dataAttrs = [];
+
+  for (var attr in obj) {
+    if (obj.hasOwnProperty(attr)) {
+      dataAttrs.push('data-' + attr + '=' + obj[attr]);
+    }
+  }
+
+  return dataAttrs.join(' ');
+}
+
+function createEventProp(tid, value) {
+  var eventProp = document.createElement('input');
+
+  eventProp.setAttribute('type', 'hidden');
+  eventProp.setAttribute('data-ttype', 'event');
+  eventProp.setAttribute('data-tid', tid);
+  eventProp.setAttribute('value', value);
+
+  return eventProp;
+}
+
 var Step = (function (_Evented) {
   _inherits(Step, _Evented);
 
@@ -363,8 +386,8 @@ var Step = (function (_Evented) {
     }
   }, {
     key: 'cancel',
-    value: function cancel() {
-      this.tour.cancel();
+    value: function cancel(e) {
+      this.tour.cancel(e);
       this.trigger('cancel');
     }
   }, {
@@ -410,7 +433,21 @@ var Step = (function (_Evented) {
         this.destroy();
       }
 
-      this.el = createFromHTML('<div class=\'shepherd-step ' + (this.options.classes || '') + '\' data-id=\'' + this.id + '\' ' + (this.options.idAttribute ? 'id="' + this.options.idAttribute + '"' : '') + '></div>');
+      var dataAttrs = this.options.dataAttrs ? stringifyDataAttrs(this.options.dataAttrs) : null;
+
+      this.el = createFromHTML('<div class=\'shepherd-step ' + (this.options.classes || '') + '\' data-id=\'' + this.id + '\' ' + (this.options.idAttribute ? 'id="' + this.options.idAttribute + '"' : '') + ' ' + (dataAttrs ? dataAttrs : '') + '></div>');
+
+      var tourVersionEventProp = createEventProp('version', this.options.commonEventProps.version);
+      this.el.appendChild(tourVersionEventProp);
+
+      var stepCountEventProp = createEventProp('step-count', this.options.commonEventProps.stepCount);
+      this.el.appendChild(stepCountEventProp);
+
+      var currentStepEventProp = createEventProp('current-step', this.options.id);
+      this.el.appendChild(currentStepEventProp);
+
+      var stepDescriptionEventProp = createEventProp('current-step-description', this.options.description);
+      this.el.appendChild(stepDescriptionEventProp);
 
       var content = document.createElement('div');
       content.className = 'shepherd-content';
@@ -425,7 +462,8 @@ var Step = (function (_Evented) {
       }
 
       if (this.options.showCancelLink) {
-        var link = createFromHTML("<a href class='shepherd-cancel-link'>✕</a>");
+        var cancelLinkDataAttrs = this.options.cancelLinkDataAttrs ? stringifyDataAttrs(this.options.cancelLinkDataAttrs) : null;
+        var link = createFromHTML('<a href=\'#\' class=\'shepherd-cancel-link\' ' + (cancelLinkDataAttrs ? cancelLinkDataAttrs : '') + '>✕</a>');
         header.appendChild(link);
 
         this.el.className += ' shepherd-has-cancel-link';
@@ -464,7 +502,8 @@ var Step = (function (_Evented) {
           var buttons = createFromHTML("<ul class='shepherd-buttons'></ul>");
 
           _this5.options.buttons.map(function (cfg) {
-            var button = createFromHTML('<li><a class=\'shepherd-button ' + (cfg.classes || '') + '\'>' + cfg.text + '</a>');
+            var dataAttrs = cfg.dataAttrs ? stringifyDataAttrs(cfg.dataAttrs) : null;
+            var button = createFromHTML('<li><a class=\'shepherd-button ' + (cfg.classes || '') + '\' ' + (dataAttrs ? dataAttrs : '') + '>' + cfg.text + '</a>');
             buttons.appendChild(button);
             _this5.bindButtonEvents(cfg, button.querySelector('a'));
           });
@@ -488,8 +527,7 @@ var Step = (function (_Evented) {
       var _this6 = this;
 
       link.addEventListener('click', function (e) {
-        e.preventDefault();
-        _this6.cancel();
+        _this6.cancel(e);
       });
     }
   }, {
@@ -649,11 +687,12 @@ var Tour = (function (_Evented2) {
     }
   }, {
     key: 'cancel',
-    value: function cancel() {
+    value: function cancel(e) {
       if (this.currentStep) {
         this.currentStep.hide();
       }
-      this.trigger('cancel');
+
+      this.trigger('cancel', e);
       this.done();
     }
   }, {
