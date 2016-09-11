@@ -348,8 +348,8 @@ class Step extends Evented {
     return this.el && hasClass(this.el, 'shepherd-open');
   }
 
-  cancel() {
-    this.tour.cancel();
+  cancel(e) {
+    this.tour.cancel(e);
     this.trigger('cancel');
   }
 
@@ -475,8 +475,7 @@ class Step extends Evented {
 
   bindCancelLink(link) {
     link.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.cancel();
+      this.cancel(e);
     });
   }
 
@@ -619,11 +618,12 @@ class Tour extends Evented {
     this.show(index - 1, false);
   }
 
-  cancel() {
+  cancel(e) {
     if (this.currentStep) {
       this.currentStep.hide();
     }
-    this.trigger('cancel');
+
+    this.trigger('cancel', e);
     this.done();
   }
 
