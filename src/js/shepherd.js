@@ -119,6 +119,18 @@ function parseShorthand (obj, props) {
   return out;
 }
 
+function stringifyDataAttrs(obj) {
+  let dataAttrs = [];
+
+  for (let attr in obj) {
+    if (obj.hasOwnProperty(attr)) {
+      dataAttrs.push(`data-${attr}=${obj[attr]}`);
+    }
+  }
+
+  return dataAttrs.join(' ');
+}
+
 class Step extends Evented {
 
   constructor(tour, options) {
@@ -364,7 +376,9 @@ class Step extends Evented {
       this.destroy();
     }
 
-    this.el = createFromHTML(`<div class='shepherd-step ${ this.options.classes || '' }' data-id='${ this.id }' ${ this.options.idAttribute ? 'id="' + this.options.idAttribute + '"' : '' }></div>`);
+    let dataAttrs = this.options.dataAttrs ? stringifyDataAttrs(this.options.dataAttrs) : null;
+
+    this.el = createFromHTML(`<div class='shepherd-step ${ this.options.classes || '' }' data-id='${ this.id }' ${ this.options.idAttribute ? 'id="' + this.options.idAttribute + '"' : '' } ${ dataAttrs ? dataAttrs : '' }></div>`);
 
     let content = document.createElement('div');
     content.className = 'shepherd-content';
@@ -379,7 +393,8 @@ class Step extends Evented {
     }
 
     if (this.options.showCancelLink) {
-      const link = createFromHTML("<a href class='shepherd-cancel-link'>✕</a>");
+      let cancelLinkDataAttrs = this.options.cancelLinkDataAttrs ? stringifyDataAttrs(this.options.cancelLinkDataAttrs) : null;
+      const link = createFromHTML(`<a href='#' class='shepherd-cancel-link' ${ cancelLinkDataAttrs ? cancelLinkDataAttrs : '' }>✕</a>`);
       header.appendChild(link);
 
       this.el.className += ' shepherd-has-cancel-link';
@@ -415,7 +430,8 @@ class Step extends Evented {
       let buttons = createFromHTML("<ul class='shepherd-buttons'></ul>");
 
       this.options.buttons.map(cfg => {
-        const button = createFromHTML(`<li><a class='shepherd-button ${ cfg.classes || '' }'>${ cfg.text }</a>`);
+        let dataAttrs = cfg.dataAttrs ? stringifyDataAttrs(cfg.dataAttrs) : null;
+        const button = createFromHTML(`<li><a class='shepherd-button ${ cfg.classes || '' }' ${ dataAttrs ? dataAttrs : '' }>${ cfg.text }</a>`);
         buttons.appendChild(button);
         this.bindButtonEvents(cfg, button.querySelector('a'));
       });
